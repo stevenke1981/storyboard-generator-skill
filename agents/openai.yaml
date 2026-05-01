@@ -1,4 +1,4 @@
 interface:
   display_name: "Storyboard Generator"
-  short_description: "Story, character, and shot-ready storyboard plans"
-  default_prompt: "Use $storyboard-generator to create a video-ready storyboard package from my story idea."
+  short_description: "Storyboards, character sheets, and generated panel assets"
+  default_prompt: "Use $storyboard-generator to create a video-ready storyboard package and generate character or storyboard images when requested."
