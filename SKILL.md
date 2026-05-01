@@ -42,8 +42,9 @@ This skill has two delivery modes:
    - Use Codex image-generation mode if the user asks for `產生圖`, `人物圖`, `角色圖`, `分鏡圖`, `storyboard images`, `panels`, `keyframes`, `character sheets`, `直接生成`, or equivalent wording.
    - Read and follow the `imagegen` skill before generating images. Prefer the built-in `image_gen` tool for normal image generation. Use the CLI `gpt-image-2` path only when the user explicitly asks for `gpt-image-2`, `ChatGPT Image 2`, API/CLI/model-specific control, or after the user confirms a required fallback.
    - Generate character assets first, then storyboard panels. Character assets should include at least one clean front-view design image for each main character before panel generation, unless the user asks only for panels.
-   - For many panels, generate a practical subset first unless the user explicitly asks for all panels. Default subset: all main character sheets plus 4 key storyboard panels covering setup, escalation, climax, and resolution. If the user asks for all images, generate all requested images in sequential order.
+   - For many panels, generate a practical subset first unless the user explicitly asks for all panels. Default subset: all main character sheets plus 4 key storyboard panels covering setup, escalation, climax, and resolution. This is a cost/time/quality-control default, not a limitation. If the user asks for all images, every panel, all shots, or equivalent wording, generate all requested images in sequential order and continue until the set is complete or a tool/runtime failure occurs.
    - Save generated assets inside the user's requested project/output folder. Use stable filenames such as `characters/CHAR-A-lin-qing-front.png` and `storyboard/SHOT-001.png`. Never leave project-bound assets only in Codex's default generated-images location.
+   - If the user asks for a storyboard thumbnail sheet, overview board, contact sheet, or `分鏡縮圖在一張圖片中`, create a deterministic contact sheet from the generated storyboard images using `scripts/create_contact_sheet.py`. Do not ask the image model to redraw the entire sheet unless no source images exist or the user explicitly wants a newly illustrated collage.
    - Include a manifest table that maps each saved image path to the character ID or shot ID, prompt, negative prompt, and generation mode used.
    - If the image tool is unavailable, still produce the prompts and manifest template, and explicitly state that image generation could not run.
 
@@ -69,6 +70,10 @@ When Codex image-generation mode is used, also output:
 
 10. `Generated Image Manifest`
 
+When a storyboard thumbnail/contact sheet is requested, also output:
+
+11. `Storyboard Thumbnail Sheet`
+
 For compact requests, output only the requested sections but keep the same field names.
 
 Read `references/output-spec.md` when producing a detailed storyboard package, a reusable template, or a video production handoff.
@@ -93,6 +98,8 @@ Read `references/output-spec.md` when producing a detailed storyboard package, a
 - Use 16:9 for storyboard panels unless the user specifies another aspect ratio. Use square or portrait only for character sheets if the user asks or the generation target benefits from it.
 - For anime or comic requests, lock style consistently across every generated prompt: line quality, coloring, lighting, character proportions, and background detail.
 - For large batches, name assets with zero-padded IDs and write prompts to a prompt bank before generating, so failed or regenerated images can be traced.
+- If generating all panels, report progress in batches and keep appending to the manifest so partial progress remains usable after interruptions.
+- For thumbnail sheets, use `scripts/create_contact_sheet.py` after image generation. Provide `--input-dir` with generated storyboard panels, `--output` inside the project folder, and choose grid columns based on the number of panels. Use labels from filenames or a CSV/JSON manifest when available.
 - If the user explicitly requests ChatGPT Image 2 / `gpt-image-2`, use the imagegen skill's CLI fallback guidance and require `OPENAI_API_KEY`; otherwise use the built-in `image_gen` tool by default.
 - If using built-in `image_gen`, move or copy final selected outputs from Codex's default generated-images location into the project/output folder before finishing.
 - Do not overwrite existing generated assets unless the user asks for replacement; create versioned filenames such as `SHOT-001-v2.png`.
@@ -108,3 +115,4 @@ Before finishing, check that:
 - The storyboard table has no missing shot IDs, durations, or prompts.
 - Visual continuity does not drift across panels.
 - If images were requested, all generated file paths exist in the output folder and the manifest maps each file to its prompt.
+- If a thumbnail/contact sheet was requested, the sheet image exists and contains the expected generated panels in readable order.
